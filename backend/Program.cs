@@ -1,15 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using ClosedXML.Excel;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Cors;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
 
 var app = builder.Build();
 
@@ -21,50 +36,51 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowAllOrigins");
 
 // Load data from Excel file immediately on startup
 var excelDataService = new ExcelDataService();
-excelDataService.LoadData(); // Load data once at startup
+await excelDataService.LoadDataAsync(); // Load data once at startup
 
 // GET: Retrieve all ExcelData entries
-app.MapGet("/gets", () =>
+app.MapGet("/gets", async () =>
 {
-    return Results.Ok(excelDataService.GetAllExcelData());
+    return Results.Ok(await excelDataService.GetAllExcelDataAsync());
 })
 .WithName("GetAllExcelData")
 .WithOpenApi();
 
 // GET: Retrieve a specific ExcelData entry by ID
-app.MapGet("/get/{id}", (int id) =>
+app.MapGet("/get/{id}", async (int id) =>
 {
-    var data = excelDataService.GetExcelDataById(id);
+    var data = await excelDataService.GetExcelDataByIdAsync(id);
     return data is not null ? Results.Ok(data) : Results.NotFound();
 })
 .WithName("GetExcelDataById")
 .WithOpenApi();
 
 // POST: Create a new ExcelData entry
-app.MapPost("/create", (ExcelData newData) =>
+app.MapPost("/create", async ([FromBody] ExcelData newData) =>
 {
-    var createdData = excelDataService.CreateExcelData(newData);
+    var createdData = await excelDataService.CreateExcelDataAsync(newData);
     return Results.Created($"/exceldatatest/gets/{createdData.ID}", createdData);
 })
 .WithName("CreateExcelData")
 .WithOpenApi();
 
 // PUT: Update an existing ExcelData entry by ID
-app.MapPut("/updates/{id}", (int id, ExcelData updatedData) =>
+app.MapPut("/updates/{id}", async (int id, [FromBody] ExcelData updatedData) =>
 {
-    var result = excelDataService.UpdateExcelData(id, updatedData);
+    var result = await excelDataService.UpdateExcelDataAsync(id, updatedData);
     return result ? Results.NoContent() : Results.NotFound();
 })
 .WithName("UpdateExcelData")
 .WithOpenApi();
 
 // DELETE: Delete an existing ExcelData entry by ID
-app.MapDelete("/deletes/{id}", (int id) =>
+app.MapDelete("/deletes/{id}", async (int id) =>
 {
-    var result = excelDataService.DeleteExcelData(id);
+    var result = await excelDataService.DeleteExcelDataAsync(id);
     return result ? Results.NoContent() : Results.NotFound();
 })
 .WithName("DeleteExcelData")
@@ -92,13 +108,13 @@ public class ExcelDataService
     private List<ExcelData> excelDataStore = new List<ExcelData>();
     private int nextId = 1; // Keep track of the next ID to assign
 
-    public void LoadData()
+    public async Task LoadDataAsync()
     {
         var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Exelfiles", "Foodsales.xlsx");
-        excelDataStore = ReadExcelFile(filePath); // Read data once at startup
+        excelDataStore = await ReadExcelFileAsync(filePath); // Read data once at startup
     }
 
-    private List<ExcelData> ReadExcelFile(string filePath)
+    private async Task<List<ExcelData>> ReadExcelFileAsync(string filePath)
     {
         var columnData = new List<ExcelData>();
 
@@ -130,26 +146,27 @@ public class ExcelDataService
         return columnData;
     }
 
-    public List<ExcelData> GetAllExcelData()
+    public Task<List<ExcelData>> GetAllExcelDataAsync()
     {
-        return excelDataStore; // Return the in-memory data
+        return Task.FromResult(excelDataStore); // Return the in-memory data
     }
 
-    public ExcelData? GetExcelDataById(int id)
+    public Task<ExcelData?> GetExcelDataByIdAsync(int id)
     {
-        return excelDataStore.FirstOrDefault(data => data.ID == id);
+        var data = excelDataStore.FirstOrDefault(data => data.ID == id);
+        return Task.FromResult(data);
     }
 
-    public ExcelData CreateExcelData(ExcelData newData)
+    public async Task<ExcelData> CreateExcelDataAsync(ExcelData newData)
     {
         newData.ID = nextId++; // Assign the next ID
         excelDataStore.Add(newData);
-        return newData;
+        return await Task.FromResult(newData);
     }
 
-    public bool UpdateExcelData(int id, ExcelData updatedData)
+    public async Task<bool> UpdateExcelDataAsync(int id, ExcelData updatedData)
     {
-        var existingData = GetExcelDataById(id);
+        var existingData = await GetExcelDataByIdAsync(id);
         if (existingData is null)
             return false;
 
@@ -166,9 +183,9 @@ public class ExcelDataService
         return true;
     }
 
-    public bool DeleteExcelData(int id)
+    public async Task<bool> DeleteExcelDataAsync(int id)
     {
-        var existingData = GetExcelDataById(id);
+        var existingData = await GetExcelDataByIdAsync(id);
         if (existingData is null)
             return false;
 

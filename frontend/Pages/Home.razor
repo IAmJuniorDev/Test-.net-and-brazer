@@ -1,7 +1,64 @@
 ﻿@page "/"
+@inject ApiService ApiService
+@using MudBlazor
 
-<PageTitle>Home</PageTitle>
+<h3>Excel Data</h3>
 
-<h1>Hello, world!</h1>
+<MudTextField @bind-Value="searchString" Placeholder="Search..." />
+<br />
 
-Welcome to your new app.
+@if (excelData == null)
+{
+  <p><em>Loading...</em></p>
+}
+else
+{
+  <MudTable Items="@filteredData" Hover="true" SortLabel="Sort By">
+  <HeaderContent>
+    <MudTh SortBy="@nameof(ExcelData.OrderDate)">Order Date</MudTh>
+    <MudTh SortBy="@nameof(ExcelData.Region)">Region</MudTh>
+    <MudTh SortBy="@nameof(ExcelData.City)">City</MudTh>
+    <MudTh SortBy="@nameof(ExcelData.Category)">Category</MudTh>
+    <MudTh SortBy="@nameof(ExcelData.Product)">Product</MudTh>
+    <MudTh SortBy="@nameof(ExcelData.Quantity)">Quantity</MudTh>
+    <MudTh SortBy="@nameof(ExcelData.UnitPrice)">Unit Price</MudTh>
+    <MudTh SortBy="@nameof(ExcelData.TotalPrice)">Total Price</MudTh>
+    <MudTh>Edit</MudTh>
+    <MudTh>Delete</MudTh>
+  </HeaderContent>
+  <RowTemplate>
+    <MudTd>@context.OrderDate.ToString("MM/dd/yyyy")</MudTd>
+    <MudTd>@context.Region</MudTd>
+    <MudTd>@context.City</MudTd>
+    <MudTd>@context.Category</MudTd>
+    <MudTd>@context.Product</MudTd>
+    <MudTd>@context.Quantity</MudTd>
+    <MudTd>@context.UnitPrice.ToString("C")</MudTd>
+    <MudTd>@context.TotalPrice.ToString("C")</MudTd>
+    <MudTd>
+      <MudButton Color="Color.Primary">Edit</MudButton>
+    </MudTd>
+    <MudTd>
+      <MudButton Color="Color.Error">Delete</MudButton>
+    </MudTd>
+  </RowTemplate>
+</MudTable>
+}
+
+@code {
+  private List<ExcelData> excelData;
+  private string searchString = string.Empty;
+
+  protected override async Task OnInitializedAsync()
+  {
+    excelData = await ApiService.GetAllExcelData();
+  }
+
+  private IEnumerable<ExcelData> filteredData =>
+  string.IsNullOrWhiteSpace(searchString)
+  ? excelData
+  : excelData.Where(x => x.Region.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+  x.City.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+  x.Category.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+  x.Product.Contains(searchString, StringComparison.OrdinalIgnoreCase));
+}
