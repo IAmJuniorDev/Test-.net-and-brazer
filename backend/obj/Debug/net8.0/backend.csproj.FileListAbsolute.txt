@@ -32,3 +32,10 @@
 /Users/mac/Desktop/Test2/Test-.net-and-brazer/backend/obj/Debug/net8.0/backend.pdb
 /Users/mac/Desktop/Test2/Test-.net-and-brazer/backend/obj/Debug/net8.0/backend.genruntimeconfig.cache
 /Users/mac/Desktop/Test2/Test-.net-and-brazer/backend/obj/Debug/net8.0/ref/backend.dll
+/Users/mac/Desktop/Test2/Test-.net-and-brazer/backend/bin/Debug/net8.0/ClosedXML.dll
+/Users/mac/Desktop/Test2/Test-.net-and-brazer/backend/bin/Debug/net8.0/DocumentFormat.OpenXml.dll
+/Users/mac/Desktop/Test2/Test-.net-and-brazer/backend/bin/Debug/net8.0/ExcelNumberFormat.dll
+/Users/mac/Desktop/Test2/Test-.net-and-brazer/backend/bin/Debug/net8.0/Irony.dll
+/Users/mac/Desktop/Test2/Test-.net-and-brazer/backend/bin/Debug/net8.0/SixLabors.Fonts.dll
+/Users/mac/Desktop/Test2/Test-.net-and-brazer/backend/bin/Debug/net8.0/System.IO.Packaging.dll
+/Users/mac/Desktop/Test2/Test-.net-and-brazer/backend/bin/Debug/net8.0/XLParser.dll
