@@ -2,63 +2,78 @@
 @inject ApiService ApiService
 @using MudBlazor
 
-<h3>Excel Data</h3>
-
-<MudTextField @bind-Value="searchString" Placeholder="Search..." />
-<br />
-
-@if (excelData == null)
+@if (ExcelData == null)
 {
   <p><em>Loading...</em></p>
 }
 else
 {
-  <MudTable Items="@filteredData" Hover="true" SortLabel="Sort By">
+  <MudTable Items="@ExcelData" Hover="true" SortLabel="Sort By" Filter="new Func<ExcelData, bool>(FilterFunc)">
+  <ToolBarContent>
+    <MudText Typo="Typo.h6">Excel Data</MudText>
+    <MudSpacer />
+    <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start"
+      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+<MudDatePicker id="client_dateofbirth"
+                       Style="max-width: 300px"
+                       Label="Date of birth"
+                       Placeholder="dd-MM-yyyy"
+                       Editable="true"
+                       Required="false"
+                       Mask="@(new DateMask("dd-MM-yyyy"))"
+                       DateFormat="dd-MM-yyyy"
+                       Variant="Variant.Outlined"
+                       @bind-Date="_date">
+        </MudDatePicker>  </ToolBarContent>
   <HeaderContent>
-    <MudTh SortBy="@nameof(ExcelData.OrderDate)">Order Date</MudTh>
-    <MudTh SortBy="@nameof(ExcelData.Region)">Region</MudTh>
-    <MudTh SortBy="@nameof(ExcelData.City)">City</MudTh>
-    <MudTh SortBy="@nameof(ExcelData.Category)">Category</MudTh>
-    <MudTh SortBy="@nameof(ExcelData.Product)">Product</MudTh>
-    <MudTh SortBy="@nameof(ExcelData.Quantity)">Quantity</MudTh>
-    <MudTh SortBy="@nameof(ExcelData.UnitPrice)">Unit Price</MudTh>
-    <MudTh SortBy="@nameof(ExcelData.TotalPrice)">Total Price</MudTh>
-    <MudTh>Edit</MudTh>
-    <MudTh>Delete</MudTh>
+    <MudTh>
+      <MudTableSortLabel SortBy="new Func<ExcelData, object>(x => x.OrderDate)">Date</MudTableSortLabel>
+    </MudTh>
   </HeaderContent>
   <RowTemplate>
-    <MudTd>@context.OrderDate.ToString("MM/dd/yyyy")</MudTd>
-    <MudTd>@context.Region</MudTd>
-    <MudTd>@context.City</MudTd>
-    <MudTd>@context.Category</MudTd>
-    <MudTd>@context.Product</MudTd>
-    <MudTd>@context.Quantity</MudTd>
-    <MudTd>@context.UnitPrice.ToString("C")</MudTd>
-    <MudTd>@context.TotalPrice.ToString("C")</MudTd>
-    <MudTd>
-      <MudButton Color="Color.Primary">Edit</MudButton>
-    </MudTd>
-    <MudTd>
-      <MudButton Color="Color.Error">Delete</MudButton>
-    </MudTd>
+    <MudTd DataLabel="Date">@context.OrderDate.ToShortDateString()</MudTd>
   </RowTemplate>
+  <PagerContent>
+    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+  </PagerContent>
 </MudTable>
 }
 
 @code {
-  private List<ExcelData> excelData;
-  private string searchString = string.Empty;
+  private List<ExcelData> ExcelData;
+  private string searchString;
+  private DateTime? _date; // Declare selectedDate without initializing
 
   protected override async Task OnInitializedAsync()
   {
-    excelData = await ApiService.GetAllExcelData();
+    ExcelData = await ApiService.GetAllExcelData();
+    _date = null; // Set selectedDate to the current date
   }
 
-  private IEnumerable<ExcelData> filteredData =>
-  string.IsNullOrWhiteSpace(searchString)
-  ? excelData
-  : excelData.Where(x => x.Region.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-  x.City.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-  x.Category.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-  x.Product.Contains(searchString, StringComparison.OrdinalIgnoreCase));
+  private bool FilterFunc(ExcelData data)
+  {
+    return FilterBySearch(data, searchString) && FilterByDate(data);
+  }
+
+  private bool FilterBySearch(ExcelData data, string searchString)
+  {
+    if (string.IsNullOrWhiteSpace(searchString))
+      return true;
+    return data.Region.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+    data.City.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+    data.Category.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+    data.Product.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+    data.Quantity.ToString().Contains(searchString) ||
+    data.UnitPrice.ToString().Contains(searchString) ||
+    data.TotalPrice.ToString().Contains(searchString);
+  }
+
+  private bool FilterByDate(ExcelData data)
+  {
+    if (!_date.HasValue)
+      return true; // No date selected, don't filter by date
+
+    // Compare the OrderDate with the selected date
+    return data.OrderDate.Date == _date.Value.Date; // Use .Date to compare only the date part
+  }
 }
