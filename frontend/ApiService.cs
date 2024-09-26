@@ -10,42 +10,31 @@ public class ApiService
     {
         _httpClient = httpClient;
     }
-
-    // Method to get all Excel data entries
     public async Task<List<ExcelData>> GetAllExcelData()
     {
         return await _httpClient.GetFromJsonAsync<List<ExcelData>>("/gets");
     }
-
-    // Method to get a specific Excel data entry by ID
     public async Task<ExcelData> GetExcelDataById(int id)
     {
         return await _httpClient.GetFromJsonAsync<ExcelData>($"/get/{id}");
     }
+    public async Task<HttpResponseMessage> CreateExcelData(ExcelData newData)
+{
+    var response = await _httpClient.PostAsJsonAsync("/create", newData);
+    return response; // Return the entire response object
+}
 
-    // Method to create a new Excel data entry
-    public async Task<ExcelData> CreateExcelData(ExcelData newData)
-    {
-        var response = await _httpClient.PostAsJsonAsync("/create", newData);
-        return await response.Content.ReadFromJsonAsync<ExcelData>();
-    }
-
-    // Method to update an existing Excel data entry
     public async Task<bool> UpdateExcelData(int id, ExcelData updatedData)
     {
         var response = await _httpClient.PutAsJsonAsync($"/updates/{id}", updatedData);
         return response.IsSuccessStatusCode;
     }
-
-    // Method to delete an existing Excel data entry
     public async Task<bool> DeleteExcelData(int id)
     {
         var response = await _httpClient.DeleteAsync($"/deletes/{id}");
         return response.IsSuccessStatusCode;
     }
 }
-
-// Define the ExcelData class (this should match your backend model)
 public class ExcelData
 {
     public DateTime OrderDate { get; set; }
@@ -53,7 +42,7 @@ public class ExcelData
     public required string City { get; set; }
     public required string Category { get; set; }
     public required string Product { get; set; }
-    public long Quantity { get; set; }
+    public decimal Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal TotalPrice { get; set; }
     public int ID { get; set; }

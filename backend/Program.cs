@@ -96,7 +96,7 @@ public class ExcelData
     public required string City { get; set; }
     public required string Category { get; set; }
     public required string Product { get; set; }
-    public long Quantity { get; set; }
+    public decimal Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal TotalPrice { get; set; }
     public int ID { get; set; } // Unique identifier
@@ -135,7 +135,7 @@ public class ExcelDataService
                     City = row.Cell(3).GetString(),
                     Category = row.Cell(4).GetString(),
                     Product = row.Cell(5).GetString(),
-                    Quantity = row.Cell(6).GetValue<long>(),
+                    Quantity = row.Cell(6).GetValue<decimal>(),
                     UnitPrice = row.Cell(7).GetValue<decimal>(),
                     TotalPrice = row.Cell(8).GetValue<decimal>(),
                 };

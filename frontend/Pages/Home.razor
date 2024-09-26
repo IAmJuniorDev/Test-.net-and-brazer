@@ -1,54 +1,185 @@
 ﻿@page "/"
 @inject ApiService ApiService
 @using MudBlazor
+@using MudBlazor.Services
+@using System.Collections.Generic
+@using System.Threading.Tasks
 
-@if (ExcelData == null)
-{
-  <p><em>Loading...</em></p>
-}
-else
-{
-  <MudTable Items="@ExcelData" Hover="true" SortLabel="Sort By" Filter="new Func<ExcelData, bool>(FilterFunc)">
-  <ToolBarContent>
-    <MudText Typo="Typo.h6">Excel Data</MudText>
-    <MudSpacer />
-    <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start"
-      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-<MudDatePicker id="client_dateofbirth"
-                       Style="max-width: 300px"
-                       Label="Date of birth"
-                       Placeholder="dd-MM-yyyy"
-                       Editable="true"
-                       Required="false"
-                       Mask="@(new DateMask("dd-MM-yyyy"))"
-                       DateFormat="dd-MM-yyyy"
-                       Variant="Variant.Outlined"
-                       @bind-Date="_date">
-        </MudDatePicker>  </ToolBarContent>
-  <HeaderContent>
-    <MudTh>
-      <MudTableSortLabel SortBy="new Func<ExcelData, object>(x => x.OrderDate)">Date</MudTableSortLabel>
-    </MudTh>
-  </HeaderContent>
-  <RowTemplate>
-    <MudTd DataLabel="Date">@context.OrderDate.ToShortDateString()</MudTd>
-  </RowTemplate>
-  <PagerContent>
-    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
-  </PagerContent>
-</MudTable>
-}
+<div>
+  <h3>Create New ExcelData Entry</h3>
+
+  <EditForm Model="@excelData" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+      <label>Order Date:</label>
+      <InputDate @bind-Value="excelData.OrderDate" />
+    </div>
+
+    <div>
+      <label>Region:</label>
+      <InputText @bind-Value="excelData.Region" />
+    </div>
+
+    <div>
+      <label>City:</label>
+      <InputText @bind-Value="excelData.City" />
+    </div>
+
+    <div>
+      <label>Category:</label>
+      <InputText @bind-Value="excelData.Category" />
+    </div>
+
+    <div>
+      <label>Product:</label>
+      <InputText @bind-Value="excelData.Product" />
+    </div>
+
+    <div>
+      <label>Quantity:</label>
+      <InputNumber @bind-Value="excelData.Quantity" />
+    </div>
+
+    <div>
+      <label>Unit Price:</label>
+      <InputNumber @bind-Value="excelData.UnitPrice" />
+    </div>
+
+    <div>
+      <label>Total Price:</label>
+      <InputNumber @bind-Value="excelData.TotalPrice" />
+    </div>
+
+    <button type="submit">Submit</button>
+  </EditForm>
+
+  @if (isSuccess)
+  {
+    <p class="text-success">Data submitted successfully!</p>
+  }
+  @if (errorMessage != null)
+  {
+    <p class="text-danger">@errorMessage</p>
+  }
+
+  @if (ExcelDataList == null)
+  {
+    <p><em>Loading...</em></p>
+  }
+  else
+  {
+    <MudTable Items="@ExcelDataList" Hover="true" SortLabel="Sort By" Filter="new Func<ExcelData, bool>(FilterFunc)">
+      <ToolBarContent>
+        <MudText Typo="Typo.h6">Excel Data</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start"
+          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudDatePicker id="client_dateofbirth" Style="max-width: 300px" Label="Select Date" Placeholder="dd-MM-yyyy"
+          Editable="true" Required="false" Mask="@(new DateMask("dd/MM/yyyy"))" DateFormat="dd/MM/yyyy"
+          Variant="Variant.Outlined" @bind-Date="_date">
+        </MudDatePicker>
+      </ToolBarContent>
+      <HeaderContent>
+        <MudTh>
+          <MudTableSortLabel SortBy="new Func<ExcelData, object>(x => x.OrderDate)">Date</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+          <MudTableSortLabel SortBy="new Func<ExcelData, object>(x => x.Region)">Region</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+          <MudTableSortLabel SortBy="new Func<ExcelData, object>(x => x.City)">City</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+          <MudTableSortLabel SortBy="new Func<ExcelData, object>(x => x.Category)">Category</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+          <MudTableSortLabel SortBy="new Func<ExcelData, object>(x => x.Product)">Product</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+          <MudTableSortLabel SortBy="new Func<ExcelData, object>(x => x.Quantity)">Quantity</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+          <MudTableSortLabel SortBy="new Func<ExcelData, object>(x => x.UnitPrice)">Unit Price</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+          <MudTableSortLabel SortBy="new Func<ExcelData, object>(x => x.TotalPrice)">Total Price</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+          Setting
+        </MudTh>
+      </HeaderContent>
+      <RowTemplate>
+        <MudTd DataLabel="Date">@context.OrderDate.ToShortDateString()</MudTd>
+        <MudTd DataLabel="Region">@context.Region</MudTd>
+        <MudTd DataLabel="City">@context.City</MudTd>
+        <MudTd DataLabel="Category">@context.Category</MudTd>
+        <MudTd DataLabel="Product">@context.Product</MudTd>
+        <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
+        <MudTd DataLabel="Unit Price">@context.UnitPrice.ToString("C")</MudTd>
+        <MudTd DataLabel="Total Price">@context.TotalPrice.ToString("C")</MudTd>
+        <MudTd DataLabel="Function">Edit</MudTd>
+        <MudTd DataLabel="Function">Delete</MudTd>
+      </RowTemplate>
+      <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+      </PagerContent>
+    </MudTable>
+  }
+
+</div>
 
 @code {
-  private List<ExcelData> ExcelData;
+  private ExcelData excelData = new ExcelData
+    {
+      Region = string.Empty,
+      City = string.Empty,
+      Category = string.Empty,
+      Product = string.Empty
+    };
+  private List<ExcelData> ExcelDataList;
   private string searchString;
-  private DateTime? _date; // Declare selectedDate without initializing
+  private DateTime? _date;
+  private bool isSuccess = false;
+  private string? errorMessage;
 
   protected override async Task OnInitializedAsync()
   {
-    ExcelData = await ApiService.GetAllExcelData();
-    _date = null; // Set selectedDate to the current date
+    try
+    {
+      ExcelDataList = await ApiService.GetAllExcelData(); // GET data from API
+    }
+    catch (Exception ex)
+    {
+      errorMessage = $"Error loading data: {ex.Message}";
+    }
+    _date = null;
   }
+
+  private async Task HandleValidSubmit()
+{
+    try
+    {
+        var response = await ApiService.CreateExcelData(excelData); 
+        if (response.IsSuccessStatusCode) // This now works because response is of type HttpResponseMessage
+        {
+            isSuccess = true;
+            errorMessage = null;
+            ExcelDataList = await ApiService.GetAllExcelData(); // Refresh data after adding new entry
+        }
+        else
+        {
+            errorMessage = "Failed to submit data. Please try again.";
+            isSuccess = false;
+        }
+    }
+    catch (Exception ex)
+    {
+        errorMessage = $"Error: {ex.Message}";
+    }
+}
+
 
   private bool FilterFunc(ExcelData data)
   {
@@ -71,9 +202,7 @@ else
   private bool FilterByDate(ExcelData data)
   {
     if (!_date.HasValue)
-      return true; // No date selected, don't filter by date
-
-    // Compare the OrderDate with the selected date
-    return data.OrderDate.Date == _date.Value.Date; // Use .Date to compare only the date part
+      return true;
+    return data.OrderDate.Date == _date.Value.Date;
   }
 }
