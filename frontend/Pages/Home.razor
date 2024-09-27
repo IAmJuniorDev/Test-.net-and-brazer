@@ -44,7 +44,7 @@
     </div>
     <button type="submit">Submit</button>
   </EditForm>
-  
+
   @if (isSuccess)
   {
     <p class="text-success">Data submitted successfully!</p>
@@ -109,8 +109,12 @@
         <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
         <MudTd DataLabel="Unit Price">@context.UnitPrice.ToString("C")</MudTd>
         <MudTd DataLabel="Total Price">@context.TotalPrice.ToString("C")</MudTd>
-        <MudTd DataLabel="Function">Edit</MudTd>
-        <MudTd DataLabel="Function">Delete</MudTd>
+        <MudTd DataLabel="Function">
+          <MudButton Color="Color.Primary" OnClick="@(() => EditRow(context))">Edit</MudButton>
+        </MudTd>
+        <MudTd DataLabel="Function">
+          <MudButton Color="Color.Error" OnClick="@(() => DeleteRow(context))">Delete</MudButton>
+        </MudTd>
       </RowTemplate>
       <PagerContent>
         <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
@@ -119,14 +123,17 @@
   }
 
 </div>
-
 @code {
   private ExcelData excelData = new ExcelData
     {
+      OrderDate = DateTime.Today,
       Region = string.Empty,
       City = string.Empty,
       Category = string.Empty,
-      Product = string.Empty
+      Product = string.Empty,
+      Quantity = 0,
+      UnitPrice = 0,
+      TotalPrice = 0
     };
   private List<ExcelData> ExcelDataList;
   private string searchString;
@@ -148,28 +155,94 @@
   }
 
   private async Task HandleValidSubmit()
-{
+  {
     try
     {
-        var response = await ApiService.CreateExcelData(excelData); 
-        if (response.IsSuccessStatusCode) // This now works because response is of type HttpResponseMessage
+      if (excelData.ID>0)
+      {
+        // Update the record
+        var isSuccess = await ApiService.UpdateExcelData(excelData.ID, excelData);
+        if (isSuccess)
         {
-            isSuccess = true;
-            errorMessage = null;
-            ExcelDataList = await ApiService.GetAllExcelData(); // Refresh data after adding new entry
+          this.isSuccess = true;
+          errorMessage = null;
+          ExcelDataList = await ApiService.GetAllExcelData();
+          excelData = new ExcelData
+            {
+              OrderDate = DateTime.Today,
+              Region = string.Empty,
+              City = string.Empty,
+              Category = string.Empty,
+              Product = string.Empty,
+            };
         }
         else
         {
-            errorMessage = "Failed to submit data. Please try again.";
-            isSuccess = false;
+          errorMessage = "Failed to update data. Please try again.";
+          this.isSuccess = false;
         }
+      }
+      else
+      {
+        // Create a new record
+        var response = await ApiService.CreateExcelData(excelData);
+        if (response.IsSuccessStatusCode)
+        {
+          this.isSuccess = true;
+          errorMessage = null;
+          ExcelDataList = await ApiService.GetAllExcelData(); // Refresh the data
+        }
+        else
+        {
+          errorMessage = "Failed to submit data. Please try again.";
+          this.isSuccess = false;
+        }
+      }
     }
     catch (Exception ex)
     {
-        errorMessage = $"Error: {ex.Message}";
+      errorMessage = $"Error: {ex.Message}";
     }
-}
+  }
 
+  private void EditRow(ExcelData data)
+  {
+    // Set the form data to the selected row data
+    excelData = new ExcelData
+      {
+        ID = data.ID,
+        OrderDate = data.OrderDate,
+        Region = data.Region,
+        City = data.City,
+        Category = data.Category,
+        Product = data.Product,
+        Quantity = data.Quantity,
+        UnitPrice = data.UnitPrice,
+        TotalPrice = data.TotalPrice
+      };
+  }
+  private async Task DeleteRow(ExcelData data)
+  {
+    try
+    {
+      var id = data.ID;
+      var response = await ApiService.DeleteExcelData(id); // Call your API to delete the data
+      if (response)
+      {
+        ExcelDataList = await ApiService.GetAllExcelData(); // Refresh the list after deletion
+        isSuccess = true;
+        errorMessage = null;
+      }
+      else
+      {
+        errorMessage = "Failed to delete data. Please try again.";
+      }
+    }
+    catch (Exception ex)
+    {
+      errorMessage = $"Error deleting data: {ex.Message}";
+    }
+  }
 
   private bool FilterFunc(ExcelData data)
   {

@@ -12,23 +12,32 @@ public class ApiService
     }
     public async Task<List<ExcelData>> GetAllExcelData()
     {
-        return await _httpClient.GetFromJsonAsync<List<ExcelData>>("/gets");
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<List<ExcelData>>("/gets");
+        }
+        catch (Exception ex)
+        {
+            // Log or handle the error accordingly
+            throw new Exception("Error fetching Excel data.", ex);
+        }
     }
     public async Task<ExcelData> GetExcelDataById(int id)
     {
         return await _httpClient.GetFromJsonAsync<ExcelData>($"/get/{id}");
     }
     public async Task<HttpResponseMessage> CreateExcelData(ExcelData newData)
-{
-    var response = await _httpClient.PostAsJsonAsync("/create", newData);
-    return response; // Return the entire response object
-}
+    {
+        var response = await _httpClient.PostAsJsonAsync("/create", newData);
+        return response; // Return the entire response object
+    }
 
     public async Task<bool> UpdateExcelData(int id, ExcelData updatedData)
     {
         var response = await _httpClient.PutAsJsonAsync($"/updates/{id}", updatedData);
         return response.IsSuccessStatusCode;
     }
+
     public async Task<bool> DeleteExcelData(int id)
     {
         var response = await _httpClient.DeleteAsync($"/deletes/{id}");

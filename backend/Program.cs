@@ -99,7 +99,7 @@ public class ExcelData
     public decimal Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal TotalPrice { get; set; }
-    public int ID { get; set; } // Unique identifier
+    public int? ID { get; set; } // Unique identifier
 }
 
 // Create a service to handle Excel data
