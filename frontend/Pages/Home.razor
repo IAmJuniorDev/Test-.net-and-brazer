@@ -7,54 +7,44 @@
 
 <div>
   <h3>Create New ExcelData Entry</h3>
-
   <EditForm Model="@excelData" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
-
     <div>
       <label>Order Date:</label>
       <InputDate @bind-Value="excelData.OrderDate" />
     </div>
-
     <div>
       <label>Region:</label>
       <InputText @bind-Value="excelData.Region" />
     </div>
-
     <div>
       <label>City:</label>
       <InputText @bind-Value="excelData.City" />
     </div>
-
     <div>
       <label>Category:</label>
       <InputText @bind-Value="excelData.Category" />
     </div>
-
     <div>
       <label>Product:</label>
       <InputText @bind-Value="excelData.Product" />
     </div>
-
     <div>
       <label>Quantity:</label>
       <InputNumber @bind-Value="excelData.Quantity" />
     </div>
-
     <div>
       <label>Unit Price:</label>
       <InputNumber @bind-Value="excelData.UnitPrice" />
     </div>
-
     <div>
       <label>Total Price:</label>
       <InputNumber @bind-Value="excelData.TotalPrice" />
     </div>
-
     <button type="submit">Submit</button>
   </EditForm>
-
+  
   @if (isSuccess)
   {
     <p class="text-success">Data submitted successfully!</p>
